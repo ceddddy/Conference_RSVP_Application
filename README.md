@@ -19,7 +19,7 @@ The Conference RSVP Application is a full-stack web application designed to mana
 - **Container Registry**: Private ECR repository (`conference-rsvp-api`).
 - **Frontend**: Single `index.html` file served by Apache on an EC2 instance (`t2.micro`, `/var/www/html`), accessible via the instance’s public IP (e.g., `http://<public-ip>`).
 
-**Architecture Diagram** (Graphical Description for draw.io):
+**Architecture Diagram** (Click the preview below to see the full cloud architecture diagram):
 [![Cloud Architecture](/Conference_RSVP_Application_Architecture.drawio%20(1).png)](/Conference_RSVP_Application_Architecture.drawio%20(2).pdf)
 
 <!-- To visualize the architecture, create a diagram in draw.io (https://app.diagrams.net/) or a similar tool using the following components, connections, and layout: -->
