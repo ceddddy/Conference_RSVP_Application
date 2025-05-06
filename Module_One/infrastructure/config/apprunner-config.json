@@ -1,0 +1,26 @@
+{
+    "SourceConfiguration": {
+        "ImageRepository": {
+            "ImageIdentifier": "597088045092.dkr.ecr.us-east-2.amazonaws.com/conference-rsvp-api:latest",
+            "ImageConfiguration": {
+                "Port": "8000"
+            },
+            "ImageRepositoryType": "ECR"
+        },
+        "AuthenticationConfiguration": {
+            "AccessRoleArn": "arn:aws:iam::597088045092:role/AppRunnerDynamoDBRole"
+        },
+        "AutoDeploymentsEnabled": true
+    },
+    "InstanceConfiguration": {
+        "Cpu": "1 vCPU",
+        "Memory": "2 GB",
+        "InstanceRoleArn": "arn:aws:iam::597088045092:role/AppRunnerDynamoDBRole"
+    },
+    "NetworkConfiguration": {
+        "EgressConfiguration": {
+            "EgressType": "DEFAULT"
+        }
+    }
+}
+

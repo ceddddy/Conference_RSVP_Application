@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSVP Test App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .form-container, .results-container {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+        input, select {
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .actions-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .api-info-container {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .mode-container {
+            background-color: #f0f8ff;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Conference RSVP Test App</h1>
+    
+    <div class="api-info-container">
+        <p>API URL: <strong>https://shtutwzpzn.us-east-2.awsapprunner.com</strong></p>
+    </div>
+
+    <div class="mode-container">
+        <label>
+            <input type="checkbox" id="useLocalAPI"> Use local API (run in browser)
+        </label>
+        <div id="localApiStatus" style="margin-top: 10px; font-style: italic;">Using remote API</div>
+    </div>
+    
+    <div class="container">
+        <div class="form-container">
+            <h2>Create Booking</h2>
+            <form id="bookingForm">
+                <label for="name">Name:</label>
+                <input type="text" id="name" required>
+                
+                <label for="surname">Surname:</label>
+                <input type="text" id="surname" required>
+                
+                <label for="email">Email:</label>
+                <input type="email" id="email" required>
+                
+                <label for="category">Category:</label>
+                <select id="category">
+                    <option value="Summit">Summit</option>
+                    <option value="Workshop">Workshop</option>
+                    <option value="Conference">Conference</option>
+                </select>
+                
+                <button type="submit">Submit Booking</button>
+            </form>
+            <div id="message"></div>
+        </div>
+        
+        <div class="results-container">
+            <h2>Bookings</h2>
+            <div class="actions-container">
+                <button id="getBookings">Get All Bookings</button>
+                <button id="clearResults">Clear Results</button>
+            </div>
+            <div id="bookingResults">
+                <p>Click "Get All Bookings" to view the data.</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Set the hardcoded API URL
+        const API_URL = "https://shtutwzpzn.us-east-2.awsapprunner.com";
+        
+        // Local storage for mock data
+        let localBookings = JSON.parse(localStorage.getItem('localBookings') || '[]');
+        
+        // Toggle between local and remote API
+        const useLocalAPICheckbox = document.getElementById('useLocalAPI');
+        const localApiStatus = document.getElementById('localApiStatus');
+        
+        useLocalAPICheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                localApiStatus.textContent = 'Using local browser storage (demo mode)';
+                localApiStatus.style.color = '#0066cc';
+            } else {
+                localApiStatus.textContent = 'Using remote API';
+                localApiStatus.style.color = 'inherit';
+            }
+        });
+
+        // Helper function to make API requests
+        async function makeRequest(url, method = 'GET', data = null) {
+            if (useLocalAPICheckbox.checked) {
+                // Use local mock implementation
+                return handleLocalRequest(url, method, data);
+            }
+            
+            // Use the embedded API URL
+            const fullUrl = `${API_URL}${url.startsWith('/') ? url : '/' + url}`;
+            
+            const options = {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                mode: 'cors'
+            };
+            
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+            
+            return fetch(fullUrl, options);
+        }
+        
+        // Handle local storage implementation
+        function handleLocalRequest(url, method, data) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    // Simulate network delay
+                    let responseBody;
+                    let status = 200;
+                    
+                    if (url === 'booking/' && method === 'GET') {
+                        // Get all bookings
+                        responseBody = [...localBookings];
+                    } 
+                    else if (url === 'booking/' && method === 'POST') {
+                        // Create booking
+                        const newBooking = {...data};
+                        const existingIndex = localBookings.findIndex(b => 
+                            b.email === newBooking.email && b.category === newBooking.category);
+                        
+                        if (existingIndex >= 0) {
+                            localBookings[existingIndex] = newBooking;
+                        } else {
+                            localBookings.push(newBooking);
+                        }
+                        localStorage.setItem('localBookings', JSON.stringify(localBookings));
+                        responseBody = newBooking;
+                    }
+                    else if (url.startsWith('booking/') && method === 'DELETE') {
+                        // Delete booking
+                        const parts = url.split('/');
+                        if (parts.length >= 4) {
+                            const email = decodeURIComponent(parts[1]);
+                            const category = decodeURIComponent(parts[2]);
+                            
+                            const initialLength = localBookings.length;
+                            localBookings = localBookings.filter(b => 
+                                !(b.email === email && b.category === category));
+                            
+                            if (localBookings.length < initialLength) {
+                                localStorage.setItem('localBookings', JSON.stringify(localBookings));
+                                status = 204; // No content
+                                responseBody = null;
+                            } else {
+                                status = 404;
+                                responseBody = { detail: 'Booking not found' };
+                            }
+                        }
+                    }
+                    
+                    resolve({
+                        ok: status >= 200 && status < 300,
+                        status: status,
+                        json: () => Promise.resolve(responseBody)
+                    });
+                }, 300); // Simulate network delay
+            });
+        }
+        
+        // Form submission
+        document.getElementById('bookingForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const bookingData = {
+                Name: document.getElementById('name').value,
+                Surname: document.getElementById('surname').value,
+                email: document.getElementById('email').value,
+                category: document.getElementById('category').value
+            };
+            
+            try {
+                const response = await makeRequest('booking/', 'POST', bookingData);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showMessage("Booking created successfully!", "success");
+                    document.getElementById('bookingForm').reset();
+                    getBookings();
+                } else {
+                    const error = await response.json();
+                    showMessage(`Error: ${error.detail || 'Failed to create booking'}`, "error");
+                }
+            } catch (error) {
+                showMessage(`Error: ${error.message}`, "error");
+            }
+        });
+        
+        // Get all bookings
+        document.getElementById('getBookings').addEventListener('click', getBookings);
+        
+        async function getBookings() {
+            try {
+                const response = await makeRequest('booking/');
+                
+                if (response.ok) {
+                    const bookings = await response.json();
+                    displayBookings(bookings);
+                } else {
+                    const error = await response.json();
+                    showMessage(`Error: ${error.detail || 'Failed to fetch bookings'}`, "error");
+                }
+            } catch (error) {
+                showMessage(`Error: ${error.message}`, "error");
+            }
+        }
+        
+        // Display bookings in a table
+        function displayBookings(bookings) {
+            const resultsContainer = document.getElementById('bookingResults');
+            
+            if (bookings.length === 0) {
+                resultsContainer.innerHTML = "<p>No bookings found.</p>";
+                return;
+            }
+            
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Surname</th>
+                            <th>Email</th>
+                            <th>Category</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            bookings.forEach(booking => {
+                tableHTML += `
+                    <tr>
+                        <td>${booking.Name}</td>
+                        <td>${booking.Surname}</td>
+                        <td>${booking.email}</td>
+                        <td>${booking.category}</td>
+                        <td>
+                            <button onclick="deleteBooking('${booking.email}', '${booking.category}')">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            resultsContainer.innerHTML = tableHTML;
+        }
+        
+        // Delete a booking
+        async function deleteBooking(email, category) {
+            if (confirm(`Are you sure you want to delete the booking for ${email}?`)) {
+                try {
+                    const encodedEmail = encodeURIComponent(email);
+                    const encodedCategory = encodeURIComponent(category);
+                    const response = await makeRequest(`booking/${encodedEmail}/${encodedCategory}`, 'DELETE');
+                    
+                    if (response.ok) {
+                        showMessage("Booking deleted successfully!", "success");
+                        getBookings();
+                    } else {
+                        const error = await response.json();
+                        showMessage(`Error: ${error.detail || 'Failed to delete booking'}`, "error");
+                    }
+                } catch (error) {
+                    showMessage(`Error: ${error.message}`, "error");
+                }
+            }
+        }
+        
+        // Show message function
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = type;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                messageDiv.textContent = '';
+                messageDiv.className = '';
+            }, 5000);
+        }
+        
+        // Clear results
+        document.getElementById('clearResults').addEventListener('click', function() {
+            document.getElementById('bookingResults').innerHTML = "<p>Results cleared.</p>";
+        });
+    </script>
+</body>
+</html>
